@@ -13,7 +13,7 @@ import { useCreateDefect, useUploadPhoto } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useRef } from "react";
-import { Camera, Upload, X, Loader2 } from "lucide-react";
+import { Camera, ImageIcon, X, Loader2 } from "lucide-react";
 import { DefectType } from "@workspace/api-client-react/src/generated/api.schemas";
 
 const schema = z.object({
@@ -44,8 +44,10 @@ export default function LoadDefect() {
   const [defectPhotoUrls, setDefectPhotoUrls] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
-  const labelPhotoInputRef = useRef<HTMLInputElement>(null);
-  const defectPhotoInputRef = useRef<HTMLInputElement>(null);
+  const labelPhotoCameraRef = useRef<HTMLInputElement>(null);
+  const labelPhotoGalleryRef = useRef<HTMLInputElement>(null);
+  const defectPhotoCameraRef = useRef<HTMLInputElement>(null);
+  const defectPhotoGalleryRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, watch, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -251,22 +253,37 @@ export default function LoadDefect() {
                 <div className="space-y-6 pt-4 border-t">
                   <div className="space-y-4">
                     <Label className="text-base">Foto del rótulo de la batea</Label>
-                    <div className="flex gap-4 items-start">
+                    <div className="flex flex-wrap gap-3 items-start">
                       <input 
                         type="file" 
                         accept="image/*" 
                         capture="environment" 
                         className="hidden" 
-                        ref={labelPhotoInputRef}
+                        ref={labelPhotoCameraRef}
+                        onChange={(e) => handleFileUpload(e, true)}
+                      />
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        ref={labelPhotoGalleryRef}
                         onChange={(e) => handleFileUpload(e, true)}
                       />
                       <Button 
                         type="button" 
                         variant="outline" 
-                        onClick={() => labelPhotoInputRef.current?.click()}
+                        onClick={() => labelPhotoCameraRef.current?.click()}
                         disabled={isUploading}
                       >
                         <Camera className="mr-2 h-4 w-4" /> Tomar Foto
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => labelPhotoGalleryRef.current?.click()}
+                        disabled={isUploading}
+                      >
+                        <ImageIcon className="mr-2 h-4 w-4" /> Elegir de Galería
                       </Button>
                       
                       {labelPhotoUrl && (
@@ -287,23 +304,39 @@ export default function LoadDefect() {
                   <div className="space-y-4">
                     <Label className="text-base">Fotos del defecto</Label>
                     <div className="flex flex-col gap-4">
-                      <div>
+                      <div className="flex flex-wrap gap-3">
                         <input 
                           type="file" 
                           accept="image/*" 
                           capture="environment" 
                           multiple
                           className="hidden" 
-                          ref={defectPhotoInputRef}
+                          ref={defectPhotoCameraRef}
+                          onChange={(e) => handleFileUpload(e, false)}
+                        />
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          multiple
+                          className="hidden" 
+                          ref={defectPhotoGalleryRef}
                           onChange={(e) => handleFileUpload(e, false)}
                         />
                         <Button 
                           type="button" 
                           variant="outline" 
-                          onClick={() => defectPhotoInputRef.current?.click()}
+                          onClick={() => defectPhotoCameraRef.current?.click()}
                           disabled={isUploading}
                         >
-                          <Camera className="mr-2 h-4 w-4" /> Agregar Fotos
+                          <Camera className="mr-2 h-4 w-4" /> Tomar Fotos
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => defectPhotoGalleryRef.current?.click()}
+                          disabled={isUploading}
+                        >
+                          <ImageIcon className="mr-2 h-4 w-4" /> Elegir de Galería
                         </Button>
                       </div>
                       
