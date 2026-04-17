@@ -3,13 +3,15 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: API specification for Baliarda Blister Defect Tracking
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: defects
+    description: Blister defect operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,160 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /defects:
+    get:
+      operationId: listDefects
+      tags: [defects]
+      summary: List all defect records
+      parameters:
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: defectType
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of defects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Defect"
+    post:
+      operationId: createDefect
+      tags: [defects]
+      summary: Create a new defect record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDefectBody"
+      responses:
+        "201":
+          description: Created defect
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Defect"
+
+  /defects/{id}:
+    get:
+      operationId: getDefect
+      tags: [defects]
+      summary: Get a single defect record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Defect record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Defect"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteDefect
+      tags: [defects]
+      summary: Delete a defect record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /defects/stats/summary:
+    get:
+      operationId: getDefectStats
+      tags: [defects]
+      summary: Get defect statistics summary
+      parameters:
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Defect statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefectStats"
+
+  /defects/export/excel:
+    get:
+      operationId: exportDefectsExcel
+      tags: [defects]
+      summary: Export defects to Excel
+      parameters:
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: defectType
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Excel file
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
+  /photos:
+    post:
+      operationId: uploadPhoto
+      tags: [defects]
+      summary: Upload a photo (base64)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadPhotoBody"
+      responses:
+        "201":
+          description: Uploaded photo URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhotoUploadResult"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +190,185 @@ components:
       required:
         - status
 
+    DefectType:
+      type: string
+      enum:
+        - arrugas
+        - pisados
+        - codificado_cortado
+        - codificado_poco_legible
+        - blisters_vacio
+        - blisters_ausencia_comprimido
+        - blisters_comprimido_partido
+        - poco_segrinado
+        - polvo
+        - manchas
+        - pinchados
+
+    Defect:
+      type: object
+      properties:
+        id:
+          type: integer
+        opNumber:
+          type: string
+        bulkCode:
+          type: string
+        product:
+          type: string
+        lot:
+          type: string
+        orderQuantity:
+          type: integer
+        blistersPerBox:
+          type: integer
+        totalBlisters:
+          type: integer
+        defectiveBlisters:
+          type: integer
+        incidenceRate:
+          type: number
+        defectType:
+          $ref: "#/components/schemas/DefectType"
+        labelPhotoUrl:
+          type: string
+          nullable: true
+        defectPhotoUrls:
+          type: array
+          items:
+            type: string
+        observations:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - opNumber
+        - bulkCode
+        - product
+        - lot
+        - orderQuantity
+        - blistersPerBox
+        - totalBlisters
+        - defectiveBlisters
+        - incidenceRate
+        - defectType
+        - defectPhotoUrls
+        - createdAt
+
+    CreateDefectBody:
+      type: object
+      properties:
+        opNumber:
+          type: string
+        bulkCode:
+          type: string
+        product:
+          type: string
+        lot:
+          type: string
+        orderQuantity:
+          type: integer
+        blistersPerBox:
+          type: integer
+        totalBlisters:
+          type: integer
+        defectiveBlisters:
+          type: integer
+        incidenceRate:
+          type: number
+        defectType:
+          $ref: "#/components/schemas/DefectType"
+        labelPhotoUrl:
+          type: string
+          nullable: true
+        defectPhotoUrls:
+          type: array
+          items:
+            type: string
+        observations:
+          type: string
+          nullable: true
+      required:
+        - opNumber
+        - bulkCode
+        - product
+        - lot
+        - orderQuantity
+        - blistersPerBox
+        - totalBlisters
+        - defectiveBlisters
+        - incidenceRate
+        - defectType
+        - defectPhotoUrls
+
+    DefectStats:
+      type: object
+      properties:
+        totalRecords:
+          type: integer
+        totalBlistersInspected:
+          type: integer
+        totalDefective:
+          type: integer
+        averageIncidenceRate:
+          type: number
+        byType:
+          type: array
+          items:
+            type: object
+            properties:
+              defectType:
+                type: string
+              count:
+                type: integer
+              totalDefective:
+                type: integer
+            required:
+              - defectType
+              - count
+              - totalDefective
+        byDate:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              count:
+                type: integer
+              totalDefective:
+                type: integer
+            required:
+              - date
+              - count
+              - totalDefective
+      required:
+        - totalRecords
+        - totalBlistersInspected
+        - totalDefective
+        - averageIncidenceRate
+        - byType
+        - byDate
+
+    UploadPhotoBody:
+      type: object
+      properties:
+        data:
+          type: string
+          description: Base64 encoded image data
+        mimeType:
+          type: string
+      required:
+        - data
+        - mimeType
+
+    PhotoUploadResult:
+      type: object
+      properties:
+        url:
+          type: string
+      required:
+        - url

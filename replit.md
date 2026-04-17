@@ -2,7 +2,7 @@
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+pnpm workspace monorepo using TypeScript. Main app: **Baliarda - Control de Defectos de Blisters** — a pharmaceutical blister defect tracking system for Baliarda laboratory quality control staff.
 
 ## Stack
 
@@ -15,6 +15,30 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
+- **Frontend**: React + Vite + Tailwind CSS + shadcn/ui
+- **Charts**: Recharts
+- **Excel export**: ExcelJS
+
+## App Structure
+
+### Pages
+- `/` — Home: Baliarda logo, 3 action buttons (Cargar Defecto, Defectos Observados, Estadísticas)
+- `/cargar-defecto` — Load Defect form: OP#, Bulk Code, Product, Lot, blister calculation, defect type selection, camera photo capture (label photo + defect photos), incidence rate auto-calculation
+- `/defectos-observados` — Defects list: filter by date range and defect type, view all records with photos, delete, Excel export
+- `/estadisticas` — Statistics: bar chart by defect type, line chart over time, summary cards
+
+### Defect Types
+arrugas, pisados, codificado_cortado, codificado_poco_legible, blisters_vacio, blisters_ausencia_comprimido, blisters_comprimido_partido, poco_segrinado, polvo, manchas, pinchados
+
+### API Routes
+- GET /api/defects — list with optional filters (fromDate, toDate, defectType)
+- POST /api/defects — create defect record
+- GET /api/defects/:id — get single defect
+- DELETE /api/defects/:id — delete defect
+- GET /api/defects/stats/summary — statistics summary
+- GET /api/defects/export/excel — Excel file download
+- POST /api/photos — upload base64 photo, returns URL
+- GET /api/uploads/:filename — serve uploaded photos
 
 ## Key Commands
 
