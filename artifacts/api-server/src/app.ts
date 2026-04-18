@@ -39,4 +39,19 @@ app.use("/api/uploads", express.static(uploadDir));
 
 app.use("/api", router);
 
+// Serve frontend static files (built by baliarda-blisters)
+// pnpm runs start from artifacts/api-server/, so go one level up to artifacts/
+const clientDistPath = path.join(process.cwd(), "..", "baliarda-blisters", "dist", "public");
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  // SPA fallback: send index.html for any non-API route
+  app.use((_req, res) => {
+    res.sendFile(path.join(clientDistPath, "index.html"));
+  });
+} else {
+  app.get("/", (_req, res) => {
+    res.json({ status: "ok", message: "API running. Frontend not built." });
+  });
+}
+
 export default app;
