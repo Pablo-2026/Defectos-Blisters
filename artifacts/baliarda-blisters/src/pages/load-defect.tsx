@@ -71,6 +71,31 @@ export default function LoadDefect() {
   const totalBlisters = (orderQty || 0) * (blistersPerBox || 0);
   const incidenceRate = totalBlisters > 0 ? ((defectiveBlisters || 0) / totalBlisters) * 100 : 0;
 
+  const compressImage = (file: File, maxWidth = 1600, quality = 0.8): Promise<{ data: string; mimeType: string }> => {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("Canvas no disponible")); return; }
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve({ data: dataUrl.split(",")[1], mimeType: "image/jpeg" });
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("No se pudo leer la imagen")); };
+      img.src = url;
+    });
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isLabel: boolean) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -79,23 +104,12 @@ export default function LoadDefect() {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
-        // Convert to base64
-        const reader = new FileReader();
-        const base64Promise = new Promise<string>((resolve, reject) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-        });
-        reader.readAsDataURL(file);
-        
-        const base64 = await base64Promise;
-        const base64Data = base64.split(",")[1];
-        
+
+        // Compress image before upload to avoid crashing on large camera photos
+        const { data: base64Data, mimeType } = await compressImage(file);
+
         const result = await uploadPhoto.mutateAsync({
-          data: {
-            data: base64Data,
-            mimeType: file.type || "image/jpeg"
-          }
+          data: { data: base64Data, mimeType }
         });
 
         if (isLabel) {
@@ -105,15 +119,17 @@ export default function LoadDefect() {
         }
       }
     } catch (error) {
+      const msg = error instanceof Error ? error.message : "Error desconocido";
       toast({
-        title: "Error",
-        description: "Hubo un problema al subir la imagen.",
+        title: "Error al subir la imagen",
+        description: msg.includes("503") || msg.includes("Cloudinary")
+          ? "Servicio de imágenes no configurado en el servidor."
+          : "Verificá tu conexión e intentá de nuevo.",
         variant: "destructive"
       });
     } finally {
       setIsUploading(false);
-      // Reset input
-      if (e.target) e.target.value = '';
+      if (e.target) e.target.value = "";
     }
   };
 
