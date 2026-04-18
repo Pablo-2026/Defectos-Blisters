@@ -35,19 +35,13 @@ export const ListDefectsResponseItem = zod.object({
   totalBlisters: zod.number(),
   defectiveBlisters: zod.number(),
   incidenceRate: zod.number(),
-  defectType: zod.enum([
-    "arrugas",
-    "pisados",
-    "codificado_cortado",
-    "codificado_poco_legible",
-    "blisters_vacio",
-    "blisters_ausencia_comprimido",
-    "blisters_comprimido_partido",
-    "poco_segrinado",
-    "polvo",
-    "manchas",
-    "pinchados",
-  ]),
+  defectType: zod.string(),
+  defectItems: zod.array(
+    zod.object({
+      type: zod.string(),
+      count: zod.number(),
+    }),
+  ),
   labelPhotoUrl: zod.string().nullish(),
   defectPhotoUrls: zod.array(zod.string()),
   observations: zod.string().nullish(),
@@ -68,22 +62,69 @@ export const CreateDefectBody = zod.object({
   totalBlisters: zod.number(),
   defectiveBlisters: zod.number(),
   incidenceRate: zod.number(),
-  defectType: zod.enum([
-    "arrugas",
-    "pisados",
-    "codificado_cortado",
-    "codificado_poco_legible",
-    "blisters_vacio",
-    "blisters_ausencia_comprimido",
-    "blisters_comprimido_partido",
-    "poco_segrinado",
-    "polvo",
-    "manchas",
-    "pinchados",
-  ]),
+  defectType: zod.string(),
+  defectItems: zod.array(
+    zod.object({
+      type: zod.string(),
+      count: zod.number(),
+    }),
+  ),
   labelPhotoUrl: zod.string().nullish(),
   defectPhotoUrls: zod.array(zod.string()),
   observations: zod.string().nullish(),
+});
+
+/**
+ * @summary Update an existing defect record
+ */
+export const UpdateDefectParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateDefectBody = zod.object({
+  opNumber: zod.string(),
+  bulkCode: zod.string(),
+  product: zod.string(),
+  lot: zod.string(),
+  orderQuantity: zod.number(),
+  blistersPerBox: zod.number(),
+  totalBlisters: zod.number(),
+  defectiveBlisters: zod.number(),
+  incidenceRate: zod.number(),
+  defectType: zod.string(),
+  defectItems: zod.array(
+    zod.object({
+      type: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+  labelPhotoUrl: zod.string().nullish(),
+  defectPhotoUrls: zod.array(zod.string()),
+  observations: zod.string().nullish(),
+});
+
+export const UpdateDefectResponse = zod.object({
+  id: zod.number(),
+  opNumber: zod.string(),
+  bulkCode: zod.string(),
+  product: zod.string(),
+  lot: zod.string(),
+  orderQuantity: zod.number(),
+  blistersPerBox: zod.number(),
+  totalBlisters: zod.number(),
+  defectiveBlisters: zod.number(),
+  incidenceRate: zod.number(),
+  defectType: zod.string(),
+  defectItems: zod.array(
+    zod.object({
+      type: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+  labelPhotoUrl: zod.string().nullish(),
+  defectPhotoUrls: zod.array(zod.string()),
+  observations: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
 });
 
 /**
@@ -104,19 +145,13 @@ export const GetDefectResponse = zod.object({
   totalBlisters: zod.number(),
   defectiveBlisters: zod.number(),
   incidenceRate: zod.number(),
-  defectType: zod.enum([
-    "arrugas",
-    "pisados",
-    "codificado_cortado",
-    "codificado_poco_legible",
-    "blisters_vacio",
-    "blisters_ausencia_comprimido",
-    "blisters_comprimido_partido",
-    "poco_segrinado",
-    "polvo",
-    "manchas",
-    "pinchados",
-  ]),
+  defectType: zod.string(),
+  defectItems: zod.array(
+    zod.object({
+      type: zod.string(),
+      count: zod.number(),
+    }),
+  ),
   labelPhotoUrl: zod.string().nullish(),
   defectPhotoUrls: zod.array(zod.string()),
   observations: zod.string().nullish(),

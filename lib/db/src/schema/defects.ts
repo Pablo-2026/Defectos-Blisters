@@ -14,7 +14,10 @@ export const defectTypeEnum = [
   "polvo",
   "manchas",
   "pinchados",
+  "comprimido_con_pelo",
 ] as const;
+
+export type DefectItem = { type: string; count: number };
 
 export const defectsTable = pgTable("defects", {
   id: serial("id").primaryKey(),
@@ -28,6 +31,7 @@ export const defectsTable = pgTable("defects", {
   defectiveBlisters: integer("defective_blisters").notNull(),
   incidenceRate: numeric("incidence_rate", { precision: 10, scale: 4 }).notNull(),
   defectType: text("defect_type").notNull(),
+  defectItems: jsonb("defect_items").$type<DefectItem[]>().notNull().default([]),
   labelPhotoUrl: text("label_photo_url"),
   defectPhotoUrls: jsonb("defect_photo_urls").$type<string[]>().notNull().default([]),
   observations: text("observations"),

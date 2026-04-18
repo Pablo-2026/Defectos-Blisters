@@ -9,5 +9,8 @@ export const DEFECT_TYPE_LABELS: Record<string, string> = {
   poco_segrinado: "Poco segrinado",
   polvo: "Polvo",
   manchas: "Manchas",
-  pinchados: "Pinchados"
+  pinchados: "Pinchados",
+  comprimido_con_pelo: "Comprimido con pelo",
 };
+
+export const ALL_DEFECT_TYPES = Object.keys(DEFECT_TYPE_LABELS);

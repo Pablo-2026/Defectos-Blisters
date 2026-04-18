@@ -7,17 +7,19 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DEFECT_TYPE_LABELS } from "@/lib/constants";
 import { format } from "date-fns";
-import { Download, Trash2, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Download, Trash2, Pencil, Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListDefectsQueryKey } from "@workspace/api-client-react";
+import { useLocation } from "wouter";
 
 export default function DefectsList() {
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
   const [defectType, setDefectType] = useState<string>("all");
-  
+  const [, setLocation] = useLocation();
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -111,9 +113,20 @@ export default function DefectsList() {
                             <CalendarIcon className="h-4 w-4" />
                             {format(new Date(defect.createdAt), "dd/MM/yyyy HH:mm")}
                           </div>
-                          <h3 className="font-bold text-lg">{DEFECT_TYPE_LABELS[defect.defectType]}</h3>
+                          {defect.defectItems && defect.defectItems.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {defect.defectItems.map((item) => (
+                                <span key={item.type} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium px-2 py-0.5 rounded-full">
+                                  {DEFECT_TYPE_LABELS[item.type] ?? item.type}
+                                  <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-xs font-bold ml-1">{item.count}</span>
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <h3 className="font-bold text-lg">{DEFECT_TYPE_LABELS[defect.defectType] ?? defect.defectType}</h3>
+                          )}
                         </div>
-                        <div className="bg-destructive/10 text-destructive font-bold px-3 py-1 rounded-md">
+                        <div className="bg-destructive/10 text-destructive font-bold px-3 py-1 rounded-md whitespace-nowrap">
                           {defect.incidenceRate.toFixed(2)}%
                         </div>
                       </div>
@@ -156,6 +169,9 @@ export default function DefectsList() {
                           </div>
                         )}
                       </div>
+                      <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10 hover:text-primary" onClick={() => setLocation(`/cargar-defecto?id=${defect.id}`)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => handleDelete(defect.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>

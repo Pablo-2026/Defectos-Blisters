@@ -23,7 +23,13 @@ export const DefectType = {
   polvo: "polvo",
   manchas: "manchas",
   pinchados: "pinchados",
+  comprimido_con_pelo: "comprimido_con_pelo",
 } as const;
+
+export interface DefectItem {
+  type: string;
+  count: number;
+}
 
 export interface Defect {
   id: number;
@@ -36,7 +42,8 @@ export interface Defect {
   totalBlisters: number;
   defectiveBlisters: number;
   incidenceRate: number;
-  defectType: DefectType;
+  defectType: string;
+  defectItems: DefectItem[];
   labelPhotoUrl?: string | null;
   defectPhotoUrls: string[];
   observations?: string | null;
@@ -53,7 +60,25 @@ export interface CreateDefectBody {
   totalBlisters: number;
   defectiveBlisters: number;
   incidenceRate: number;
-  defectType: DefectType;
+  defectType: string;
+  defectItems: DefectItem[];
+  labelPhotoUrl?: string | null;
+  defectPhotoUrls: string[];
+  observations?: string | null;
+}
+
+export interface UpdateDefectBody {
+  opNumber: string;
+  bulkCode: string;
+  product: string;
+  lot: string;
+  orderQuantity: number;
+  blistersPerBox: number;
+  totalBlisters: number;
+  defectiveBlisters: number;
+  incidenceRate: number;
+  defectType: string;
+  defectItems: DefectItem[];
   labelPhotoUrl?: string | null;
   defectPhotoUrls: string[];
   observations?: string | null;

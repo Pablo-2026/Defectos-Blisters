@@ -25,6 +25,7 @@ import type {
   HealthStatus,
   ListDefectsParams,
   PhotoUploadResult,
+  UpdateDefectBody,
   UploadPhotoBody,
 } from "./api.schemas";
 
@@ -291,6 +292,93 @@ export const useCreateDefect = <
   TContext
 > => {
   return useMutation(getCreateDefectMutationOptions(options));
+};
+
+/**
+ * @summary Update an existing defect record
+ */
+export const getUpdateDefectUrl = (id: number) => {
+  return `/api/defects/${id}`;
+};
+
+export const updateDefect = async (
+  id: number,
+  updateDefectBody: UpdateDefectBody,
+  options?: RequestInit,
+): Promise<Defect> => {
+  return customFetch<Defect>(getUpdateDefectUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateDefectBody),
+  });
+};
+
+export const getUpdateDefectMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDefect>>,
+    TError,
+    { id: number; data: BodyType<UpdateDefectBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateDefect>>,
+  TError,
+  { id: number; data: BodyType<UpdateDefectBody> },
+  TContext
+> => {
+  const mutationKey = ["updateDefect"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateDefect>>,
+    { id: number; data: BodyType<UpdateDefectBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateDefect(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateDefectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateDefect>>
+>;
+export type UpdateDefectMutationBody = BodyType<UpdateDefectBody>;
+export type UpdateDefectMutationError = ErrorType<void>;
+
+/**
+ * @summary Update an existing defect record
+ */
+export const useUpdateDefect = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDefect>>,
+    TError,
+    { id: number; data: BodyType<UpdateDefectBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateDefect>>,
+  TError,
+  { id: number; data: BodyType<UpdateDefectBody> },
+  TContext
+> => {
+  return useMutation(getUpdateDefectMutationOptions(options));
 };
 
 /**

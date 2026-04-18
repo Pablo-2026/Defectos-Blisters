@@ -4,6 +4,8 @@ import { defectsTable } from "@workspace/db";
 import { eq, gte, lte, and, sql } from "drizzle-orm";
 import {
   CreateDefectBody,
+  UpdateDefectBody,
+  UpdateDefectParams,
   GetDefectParams,
   DeleteDefectParams,
   ListDefectsQueryParams,
@@ -26,7 +28,15 @@ const DEFECT_TYPE_LABELS: Record<string, string> = {
   polvo: "Polvo",
   manchas: "Manchas",
   pinchados: "Pinchados",
+  comprimido_con_pelo: "Comprimido con pelo",
 };
+
+const formatDefect = (d: typeof defectsTable.$inferSelect) => ({
+  ...d,
+  incidenceRate: parseFloat(d.incidenceRate),
+  defectPhotoUrls: (d.defectPhotoUrls as string[]) ?? [],
+  defectItems: (d.defectItems as { type: string; count: number }[]) ?? [],
+});
 
 router.get("/defects", async (req, res) => {
   const parsed = ListDefectsQueryParams.safeParse(req.query);
@@ -55,13 +65,7 @@ router.get("/defects", async (req, res) => {
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(sql`${defectsTable.createdAt} DESC`);
 
-  const result = defects.map((d) => ({
-    ...d,
-    incidenceRate: parseFloat(d.incidenceRate),
-    defectPhotoUrls: (d.defectPhotoUrls as string[]) ?? [],
-  }));
-
-  res.json(result);
+  res.json(defects.map(formatDefect));
 });
 
 router.post("/defects", async (req, res) => {
@@ -85,17 +89,56 @@ router.post("/defects", async (req, res) => {
       defectiveBlisters: data.defectiveBlisters,
       incidenceRate: String(data.incidenceRate),
       defectType: data.defectType,
+      defectItems: data.defectItems ?? [],
       labelPhotoUrl: data.labelPhotoUrl ?? null,
       defectPhotoUrls: data.defectPhotoUrls,
       observations: data.observations ?? null,
     })
     .returning();
 
-  res.status(201).json({
-    ...created,
-    incidenceRate: parseFloat(created.incidenceRate),
-    defectPhotoUrls: (created.defectPhotoUrls as string[]) ?? [],
-  });
+  res.status(201).json(formatDefect(created));
+});
+
+router.put("/defects/:id", async (req, res) => {
+  const paramsParsed = UpdateDefectParams.safeParse(req.params);
+  if (!paramsParsed.success) {
+    res.status(400).json({ error: "ID inválido" });
+    return;
+  }
+  const bodyParsed = UpdateDefectBody.safeParse(req.body);
+  if (!bodyParsed.success) {
+    res.status(400).json({ error: "Cuerpo inválido", details: bodyParsed.error.issues });
+    return;
+  }
+
+  const data = bodyParsed.data;
+  const [updated] = await db
+    .update(defectsTable)
+    .set({
+      opNumber: data.opNumber,
+      bulkCode: data.bulkCode,
+      product: data.product,
+      lot: data.lot,
+      orderQuantity: data.orderQuantity,
+      blistersPerBox: data.blistersPerBox,
+      totalBlisters: data.totalBlisters,
+      defectiveBlisters: data.defectiveBlisters,
+      incidenceRate: String(data.incidenceRate),
+      defectType: data.defectType,
+      defectItems: data.defectItems ?? [],
+      labelPhotoUrl: data.labelPhotoUrl ?? null,
+      defectPhotoUrls: data.defectPhotoUrls,
+      observations: data.observations ?? null,
+    })
+    .where(eq(defectsTable.id, paramsParsed.data.id))
+    .returning();
+
+  if (!updated) {
+    res.status(404).json({ error: "Registro no encontrado" });
+    return;
+  }
+
+  res.json(formatDefect(updated));
 });
 
 router.get("/defects/stats/summary", async (req, res) => {
@@ -271,11 +314,7 @@ router.get("/defects/:id", async (req, res) => {
     return;
   }
 
-  res.json({
-    ...defect,
-    incidenceRate: parseFloat(defect.incidenceRate),
-    defectPhotoUrls: (defect.defectPhotoUrls as string[]) ?? [],
-  });
+  res.json(formatDefect(defect));
 });
 
 router.delete("/defects/:id", async (req, res) => {
