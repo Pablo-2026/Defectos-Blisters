@@ -31,11 +31,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const uploadDir = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-app.use("/api/uploads", express.static(uploadDir));
+// Borra las líneas que definen uploadDir y fs.mkdirSync
+// Reemplázalas por esto:
+app.use("/api/uploads", (req, res) => {
+  res.status(404).json({ error: "Usa Cloudinary para imágenes" });
+});
 
 app.use("/api", router);
 
