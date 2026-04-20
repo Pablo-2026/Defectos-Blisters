@@ -32,14 +32,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Esta parte maneja la redirección de imágenes a Cloudinary
+// Redirección de imágenes a Cloudinary
 app.use("/api/uploads", (req, res) => {
-  res.status(404).json({ error: "Usa Cloudinary para imágenes" });
+  res.status(404).json({ error: "Usa Cloudinary para las imágenes" });
 });
 
 app.use("/api", router);
 
-// Servir archivos estáticos del frontend
+// Servir archivos del frontend
 const clientDistPath = path.join(process.cwd(), "..", "baliarda-blisters", "dist", "public");
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
