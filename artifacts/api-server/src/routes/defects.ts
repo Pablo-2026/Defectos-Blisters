@@ -1,3 +1,23 @@
+import { v2 as cloudinary } from 'cloudinary';
+import multer from 'multer';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+
+// Configuración de Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'defectos-blisters',
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  } as any,
+});
+
+const upload = multer({ storage: storage });
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { defectsTable } from "@workspace/db";
@@ -67,8 +87,10 @@ router.get("/defects", async (req, res) => {
 
   res.json(defects.map(formatDefect));
 });
-
-router.post("/defects", async (req, res) => {
+router.post("/", upload.fields([{ name: 'foto_rotulo', maxCount: 1 }, { name: 'fotos_defecto', maxCount: 5 }]), async (req: any, res) => {
+  const files = req.files as any;
+  const fotoRotuloUrl = files?.['foto_rotulo']?.[0]?.path || null;
+  const fotosDefectoUrls = files?.['fotos_defecto']?.map((f: any) => f.path) || [];
   const parsed = CreateDefectBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid body", details: parsed.error.issues });
@@ -90,8 +112,8 @@ router.post("/defects", async (req, res) => {
       incidenceRate: String(data.incidenceRate),
       defectType: data.defectType,
       defectItems: data.defectItems ?? [],
-      labelPhotoUrl: data.labelPhotoUrl ?? null,
-      defectPhotoUrls: data.defectPhotoUrls,
+     labelPhotoUrl: fotoRotuloUrl,
+        defectPhotoUrls: fotosDefectoUrls,
       observations: data.observations ?? null,
     })
     .returning();
