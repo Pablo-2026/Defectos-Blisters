@@ -1,47 +1,33 @@
 import { Router } from "express";
-import { UploadPhotoBody } from "@workspace/api-zod";
+import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 const router = Router();
 
-const cloudName = process.env["CLOUDINARY_CLOUD_NAME"];
-const apiKey = process.env["CLOUDINARY_API_KEY"];
-const apiSecret = process.env["CLOUDINARY_API_SECRET"];
+// Configuración de Cloudinary con tus llaves de Render
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-const cloudinaryConfigured = !!(cloudName && apiKey && apiSecret);
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "defectos-blisters",
+    allowed_formats: ["jpg", "png", "jpeg"],
+  } as any,
+});
 
-if (cloudinaryConfigured) {
-  cloudinary.config({
-    cloud_name: cloudName!,
-    api_key: apiKey!,
-    api_secret: apiSecret!,
-    secure: true,
-  });
-}
+const upload = multer({ storage: storage });
 
-router.post("/photos", async (req, res) => {
-  if (!cloudinaryConfigured) {
-    res.status(503).json({
-      error: "Cloudinary no configurado. Defina CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY y CLOUDINARY_API_SECRET.",
-    });
-    return;
+// Esta es la ruta exacta que activará la subida
+router.post("/", upload.single("file"), (req: any, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No se pudo procesar la imagen" });
   }
-
-  const parsed = UploadPhotoBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Cuerpo inválido", details: parsed.error.issues });
-    return;
-  }
-
-  const { data: base64Data, mimeType } = parsed.data;
-  const dataUri = `data:${mimeType};base64,${base64Data}`;
-
-  const result = await cloudinary.uploader.upload(dataUri, {
-    folder: "baliarda-defectos",
-    resource_type: "image",
-  });
-
-  res.status(201).json({ url: result.secure_url });
+  res.json({ url: req.file.path });
 });
 
 export default router;
