@@ -1,8 +1,8 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
-import router from "./routes";
-import { logger } from "./lib/logger";
+import router from "./routes/index.js";
+import { logger } from "./lib/logger.js";
 import path from "path";
 import fs from "fs";
 
@@ -25,26 +25,24 @@ app.use(
         };
       },
     },
-  }),
+  })
 );
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Borra las líneas que definen uploadDir y fs.mkdirSync
-// Reemplázalas por esto:
+// Esta parte maneja la redirección de imágenes a Cloudinary
 app.use("/api/uploads", (req, res) => {
   res.status(404).json({ error: "Usa Cloudinary para imágenes" });
 });
 
 app.use("/api", router);
 
-// Serve frontend static files (built by baliarda-blisters)
-// pnpm runs start from artifacts/api-server/, so go one level up to artifacts/
+// Servir archivos estáticos del frontend
 const clientDistPath = path.join(process.cwd(), "..", "baliarda-blisters", "dist", "public");
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
-  // SPA fallback: send index.html for any non-API route
   app.use((_req, res) => {
     res.sendFile(path.join(clientDistPath, "index.html"));
   });
